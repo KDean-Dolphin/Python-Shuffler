@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "lazy-fisher-yates-shuffler"
+version = "1.0.0"
+description = "Lazy Fisher-Yates shuffler"
+license = "Apache-2.0"
+authors = [
+    "Kevin Dean <Kevin.Dean@datadevelopment.com>"
+]
+readme = "README.md"
+repository = "https://github.com/KDean-Dolphin/Python-Shuffler"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
