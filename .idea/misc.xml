@@ -3,7 +3,7 @@
   <component name="Black">
     <option name="sdkName" value="Poetry (Shuffler)" />
   </component>
-  <component name="ProjectRootManager">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_22" project-jdk-name="Poetry (Python-Shuffler)" project-jdk-type="Python SDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
   <component name="PythonCompatibilityInspectionAdvertiser">
