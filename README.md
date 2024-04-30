@@ -25,7 +25,7 @@ shuffler = Shuffler(1000, False)
 
 # Determine the value at a given index.
 index = 10
-value = shuffler.value_at(10)
+value = shuffler.value_at(index)
 
 print(value)
 
