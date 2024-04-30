@@ -76,7 +76,7 @@ class _Node:
         """
 
         # Attempt to restore the node state if indicated.
-        node_state: Final[Optional[NodeState]] = shuffler.persistence_manager.restore_node_state(key)\
+        node_state: Final[Optional[NodeState]] = shuffler.persistence_manager.restore_node_state(key) \
             if restore else \
             None
 
@@ -151,62 +151,62 @@ class _Node:
             raise Exception("Negative struck count {} at node {}".format(self.struck_count, self.key))
 
         if not self.terminal:
+            bit_manager: Final[BitManager] = self.shuffler.bit_manager
+            bit: Final[int] = bit_manager.bit(self.bit_number)
+
+            right_size: int
+            left_size: int
+
+            if bit_manager.is_set(size, self.bit_number + 1):
+                # Size is the maximum possible and is split evenly between right and left nodes.
+                right_size = bit
+                left_size = bit
+            elif bit_manager.is_set(size, self.bit_number):
+                # Size will fill right node; put remainder in left node (clearing bit is the same as subtraction at
+                # this point).
+                right_size = bit
+                left_size = bit_manager.clear(size, self.bit_number)
+            else:
+                # Size doesn't fill right node; left node will not be created.
+                right_size = size
+                left_size = 0
+
+            right: Optional[_Node]
+            left: Optional[_Node]
+
             if self.struck_count == 0:
                 # Nodes with zero struck count shouldn't have right and/or left nodes in non-cyclic shuffler.
                 if not cyclic and (self._right is not None or self._left is not None):
                     raise Exception("Unexpected right and/or left nodes at non-persisted node {}".format(self.key))
+
+                # Validate nodes that have been created to support cyclic shuffler.
+                right = self._right
+                left = self._left
             else:
-                bit_manager: Final[BitManager] = self.shuffler.bit_manager
-                bit: Final[int] = bit_manager.bit(self.bit_number)
+                right = self.right
+                left = self.left if left_size != 0 else None
 
-                right_size: int
-                left_size: int
+            # Left node should be None if right node can handle this node.
+            if left_size == 0 and (self._left is not None or
+                                   self.shuffler.persistence_manager.restore_node_state(self.key - 1) is not None):
+                raise Exception("Unexpected left node at non-terminal node {}".format(self.key))
 
-                if bit_manager.is_set(size, self.bit_number + 1):
-                    # Size is the maximum possible and is split evenly between right and left nodes.
-                    right_size = bit
-                    left_size = bit
-                elif bit_manager.is_set(size, self.bit_number):
-                    # Size will fill right node; put remainder in left node (clearing bit is the same as subtraction at
-                    # this point).
-                    right_size = bit
-                    left_size = bit_manager.clear(size, self.bit_number)
-                else:
-                    # Size doesn't fill right node; left node will not be created.
-                    right_size = size
-                    left_size = 0
+            right_left_struck_count: int = (right.struck_count if right is not None else 0) + \
+                                           (left.struck_count if left is not None else 0)
 
-                right: Final[_Node] = self.right
-                left: Optional[_Node]
-
-                right_left_struck_count: int
-
-                if right_size != size:
-                    left = self.left
-
-                    right_left_struck_count = right.struck_count + left.struck_count
-                else:
-                    # Left node should be None if right node can handle this node.
-                    if self._left is not None or \
-                            self.shuffler.persistence_manager.restore_node_state(self.key - 1) is not None:
-                        raise Exception("Unexpected left node at non-terminal node {}".format(self.key))
-
-                    left = None
-
-                    right_left_struck_count = right.struck_count
-
-                if self.struck_count != right_left_struck_count:
-                    raise Exception("Struck count {} doesn't match sum of right and left struck counts {} at "
-                                    "non-terminal node {}".format(self.struck_count, right_left_struck_count,
-                                                                  self.key))
-
-                right.validate_state(keys, right_size, cyclic)
-
-                if left is not None:
-                    left.validate_state(keys, left_size, cyclic)
+            if self.struck_count != right_left_struck_count:
+                raise Exception("Struck count {} doesn't match sum of right and left struck counts {} at "
+                                "non-terminal node {}".format(self.struck_count, right_left_struck_count,
+                                                              self.key))
 
             if self.struck_bitmap != 0:
                 raise Exception("Non-zero struck bitmap at non-terminal node {}".format(self.key))
+
+            if right is not None:
+                right.validate_state(keys, right_size, cyclic)
+
+            if left is not None:
+                left.validate_state(keys, left_size, cyclic)
         else:
             # Terminal nodes shouldn't have right and/or left nodes.
             if self._right is not None or self._left is not None:
@@ -214,9 +214,9 @@ class _Node:
 
             struck_bit_count: Final[int] = self.struck_bitmap.bit_count()
 
-            if struck_bit_count != self.struck_count:
-                raise Exception("Struck bit count {} doesn't match struck count {} at terminal node {}".format(
-                    struck_bit_count, self.struck_count, self.key))
+            if self.struck_count != struck_bit_count:
+                raise Exception("Struck count {} doesn't match struck bit count {} at terminal node {}".format(
+                    self.struck_count, struck_bit_count, self.key))
 
 
 class Shuffler:
