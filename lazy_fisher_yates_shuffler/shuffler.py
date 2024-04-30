@@ -4,7 +4,7 @@ Shuffler, which maps an index to a value and vice versa, where the association b
 determined the first time the index-to-value mapping is requested. The reverse value-to-index mapping is possible only
 after the corresponding index-to-value mapping is determined.
 
-Copyright (c) 2024 by Dolphin Data Development Ltd.
+Copyright (c) 2024 Dolphin Data Development Ltd.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
 License. You may obtain a copy of the License at
