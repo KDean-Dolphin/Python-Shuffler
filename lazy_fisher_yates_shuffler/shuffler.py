@@ -147,8 +147,28 @@ class _Node:
 
         keys.append(self.key)
 
+        # Struck count must be >= 0.
         if self.struck_count < 0:
             raise Exception("Negative struck count {} at node {}".format(self.struck_count, self.key))
+
+        node_state: Final[Optional[NodeState]] = self.shuffler.persistence_manager.restore_node_state(self.key)
+
+        if self.struck_count == 0:
+            # Nodes with zero struck count shouldn't be persisted.
+            if node_state is not None:
+                raise Exception("Unexpected persistence of node {} with zero struck count".format(self.key))
+        else:
+            # Nodes with non-zero struck count should be persisted.
+            if node_state is None:
+                raise Exception("Missing persistence of node {} with non-zero struck count".format(self.key))
+
+            # Persisted node state must match in-memory node state.
+            if self.struck_count != node_state.struck_count or self.struck_bitmap != node_state.struck_bitmap:
+                raise Exception("Struck count {} doesn't match persisted struck count {} or struck bitmap {:08X} "
+                                "doesn't match persisted struck bitmap {:08X} at node {}".
+                                format(self.struck_count, node_state.struck_count,
+                                       self.struck_bitmap, node_state.struck_bitmap,
+                                       self.key))
 
         if not self.terminal:
             bit_manager: Final[BitManager] = self.shuffler.bit_manager
@@ -194,11 +214,13 @@ class _Node:
             right_left_struck_count: int = (right.struck_count if right is not None else 0) + \
                                            (left.struck_count if left is not None else 0)
 
+            # Struck count should equal sum of right and left struck counts.
             if self.struck_count != right_left_struck_count:
                 raise Exception("Struck count {} doesn't match sum of right and left struck counts {} at "
                                 "non-terminal node {}".format(self.struck_count, right_left_struck_count,
                                                               self.key))
 
+            # Non-terminal node should have zero bitmap.
             if self.struck_bitmap != 0:
                 raise Exception("Non-zero struck bitmap at non-terminal node {}".format(self.key))
 
@@ -214,6 +236,7 @@ class _Node:
 
             struck_bit_count: Final[int] = self.struck_bitmap.bit_count()
 
+            # Struck count should equal number of bits in struck bitmap.
             if self.struck_count != struck_bit_count:
                 raise Exception("Struck count {} doesn't match struck bit count {} at terminal node {}".format(
                     self.struck_count, struck_bit_count, self.key))
