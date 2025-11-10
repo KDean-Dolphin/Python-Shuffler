@@ -13,6 +13,11 @@ repository = "https://github.com/KDean-Dolphin/Python-Shuffler"
 python = ">=3.9,<4.0"
 poetry-core = "^2.2.1"
 
+[[tool.poetry.source]]
+name = "test-pypi"
+url = "https://test.pypi.org/legacy/"
+priority = "supplemental"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
