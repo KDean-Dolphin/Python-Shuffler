@@ -60,7 +60,7 @@ class _Node:
         """
 
         # Terminal node supports up to TERMINAL_SIZE entries.
-        self.terminal: Final[bool] = bit_number == Shuffler._TERMINAL_SIZE_BIT_COUNT - 1
+        self.terminal: Final[bool] = bit_number == Shuffler.TERMINAL_SIZE_BIT_COUNT - 1
         """
         True if this node is a terminal node.
         """
@@ -134,7 +134,7 @@ class _Node:
 
         return self._left
 
-    def validate_state(self, keys: [int], size: int, cyclic: bool):
+    def validate_state(self, keys: list[int], size: int, cyclic: bool):
         """
         Validate node, ensuring that struck count is consistent with right and left nodes (if not terminal) or with
         struck bitmap (if terminal). Used for testing.
@@ -211,8 +211,8 @@ class _Node:
                                    self.shuffler.persistence_manager.restore_node_state(self.key - 1) is not None):
                 raise Exception("Unexpected left node at non-terminal node {}".format(self.key))
 
-            right_left_struck_count: int = (right.struck_count if right is not None else 0) + \
-                                           (left.struck_count if left is not None else 0)
+            right_left_struck_count = (right.struck_count if right is not None else 0) + \
+                                      (left.struck_count if left is not None else 0)
 
             # Struck count should equal sum of right and left struck counts.
             if self.struck_count != right_left_struck_count:
@@ -256,22 +256,22 @@ class Shuffler:
     it link to the beginning of any open loop except its own.
     """
 
-    _TERMINAL_SIZE: Final[int] = 64
+    TERMINAL_SIZE: Final[int] = 64
     """
     Terminal size (number of bits in qword).
     """
 
-    _TERMINAL_SIZE_BITMASK: Final[int] = _TERMINAL_SIZE - 1
+    _TERMINAL_SIZE_BITMASK: Final[int] = TERMINAL_SIZE - 1
     """
     Terminal size bitmask.
     """
 
-    _TERMINAL_SIZE_BIT_COUNT: Final[int] = _TERMINAL_SIZE_BITMASK.bit_count()
+    TERMINAL_SIZE_BIT_COUNT: Final[int] = _TERMINAL_SIZE_BITMASK.bit_count()
     """
     Terminal size bit count.
     """
 
-    _TERMINAL_BIT_MANAGER: Final[BitManager] = BitManager(_TERMINAL_SIZE)
+    _TERMINAL_BIT_MANAGER: Final[BitManager] = BitManager(TERMINAL_SIZE)
     """
     Bit manager for terminal struck bitmap manipulation.
     """
@@ -324,7 +324,7 @@ class Shuffler:
         Bit manager up to size bit length + 1 for fast bit manipulation.
         """
 
-        self._size: int = size
+        self._size = size
         """
         Size.
         """
@@ -334,7 +334,7 @@ class Shuffler:
         Root.
         """
 
-        self._remaining_size: int = 0
+        self._remaining_size = 0
         """
         Remaining size, equivalent to size minus root struck count.
         """
@@ -383,7 +383,7 @@ class Shuffler:
 
         # If size is an exact power of two, subtracting 1 will force the bit length down by 1; round up to value for
         # full capacity terminal node if necessary.
-        size_bit_length: Final[int] = max((self.size - 1).bit_length(), Shuffler._TERMINAL_SIZE_BIT_COUNT)
+        size_bit_length: Final[int] = max((self.size - 1).bit_length(), Shuffler.TERMINAL_SIZE_BIT_COUNT)
 
         # New root must be created if not resizing (no root yet) or root bit number is changing.
         if not resizing or size_bit_length != self._root.bit_number + 1:
@@ -436,25 +436,25 @@ class Shuffler:
         :return: Next value, randomly selected from remaining unstruck entries.
         """
 
-        incremental_value: int = self._random.randrange(0, self._remaining_size)
+        incremental_value = self._random.randrange(0, self._remaining_size)
 
         self._remaining_size -= 1
 
-        value: int = 0
+        value = 0
 
         node: Optional[_Node] = self._root
 
         while node is not None:
-            pending_save_node: _Node = node
+            pending_save_node = node
 
             # One entry in current node or a descendant will be struck.
             node.struck_count += 1
 
             if not node.terminal:
-                right: _Node = node.right
+                right = node.right
 
                 # Normalize output to right node by adding number of struck entries in right node.
-                right_normalized_output: int = incremental_value + right.struck_count
+                right_normalized_output = incremental_value + right.struck_count
 
                 # Index is in range of right node if current node's bit is clear.
                 if self.bit_manager.is_clear(right_normalized_output, node.bit_number):
@@ -466,7 +466,7 @@ class Shuffler:
 
                     node = node.left
             else:
-                terminal_incremental_value_remaining: int = incremental_value
+                terminal_incremental_value_remaining = incremental_value
                 terminal_value: int
 
                 # These variables record the individual steps, except the last, of the bit count algorithm from Figure
@@ -477,13 +477,13 @@ class Shuffler:
                 # integer (e.g., bitCount4 contains 16 counts of 4-bit sets).
 
                 # Need to find an unstruck bit, so invert the struck bitmap to begin.
-                bit_count_1: int = node.struck_bitmap ^ Shuffler._TERMINAL_BIT_MANAGER.all_bits
-                bit_count_2: int = bit_count_1 - (bit_count_1 >> 0x01 & Shuffler._BIT_COUNT_BITMASK_2)
-                bit_count_4: int = ((bit_count_2 & Shuffler._BIT_COUNT_BITMASK_4) +
-                                    (bit_count_2 >> 0x02 & Shuffler._BIT_COUNT_BITMASK_4))
-                bit_count_8: int = (bit_count_4 + (bit_count_4 >> 0x04)) & Shuffler._BIT_COUNT_BITMASK_8
-                bit_count_16: int = bit_count_8 + (bit_count_8 >> 0x08)
-                bit_count_32: int = bit_count_16 + (bit_count_16 >> 0x10)
+                bit_count_1 = node.struck_bitmap ^ Shuffler._TERMINAL_BIT_MANAGER.all_bits
+                bit_count_2 = bit_count_1 - (bit_count_1 >> 0x01 & Shuffler._BIT_COUNT_BITMASK_2)
+                bit_count_4 = ((bit_count_2 & Shuffler._BIT_COUNT_BITMASK_4) +
+                              (bit_count_2 >> 0x02 & Shuffler._BIT_COUNT_BITMASK_4))
+                bit_count_8 = (bit_count_4 + (bit_count_4 >> 0x04)) & Shuffler._BIT_COUNT_BITMASK_8
+                bit_count_16 = bit_count_8 + (bit_count_8 >> 0x08)
+                bit_count_32 = bit_count_16 + (bit_count_16 >> 0x10)
 
                 # Starting with the broadest bit count, each block does the following:
                 #
@@ -596,12 +596,12 @@ class Shuffler:
 
                 terminal_bit_number: Final[int] = loop_start & Shuffler._TERMINAL_SIZE_BITMASK
 
-                reserved_nodes: [_Node] = []
+                reserved_nodes: list[_Node] = []
 
                 node: Optional[_Node] = self._root
 
                 while node is not None:
-                    pending_save_node: _Node = node
+                    pending_save_node = node
 
                     reserved_nodes.append(node)
 
@@ -633,7 +633,7 @@ class Shuffler:
 
                     # Persistence manager returns None if value is the end of its loop, otherwise value is the start of
                     # an existing loop that will be joined to this one.
-                    loop_end: int = self._persistence_manager.index_of(~value)
+                    loop_end = self._persistence_manager.index_of(~value)
                     if loop_end is None:
                         loop_end = value
 
@@ -708,14 +708,14 @@ class Shuffler:
             raise Exception("Remaining size {} doesn't equal input size {} minus root struck count {}".format(
                 self._remaining_size, self.size, self._root.struck_count))
 
-        keys: [int] = []
+        keys: list[int] = []
 
         self._root.validate_state(keys, self.size, self.cyclic)
 
         keys.sort()
 
-        minimum_key: int = keys[0]
-        maximum_key: int = minimum_key - 1
+        minimum_key = keys[0]
+        maximum_key = minimum_key - 1
 
         for key in keys:
             if key == maximum_key:
@@ -746,7 +746,7 @@ class Shuffler:
             Shuffler.
             """
 
-            self._next_index: int = 0
+            self._next_index = 0
             """
             Next index for which to get value.
             """

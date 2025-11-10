@@ -35,29 +35,29 @@ class BitManager:
         Bit count.
         """
 
-        self._bitmasks: [int] = [0] * bit_count
+        self._bitmasks = [0] * bit_count
         """
         Bitmasks. The value at any index has all bits up to and including the bit number represented by that index set.
         """
 
-        self._not_bitmasks: [int] = [0] * bit_count
+        self._not_bitmasks = [0] * bit_count
         """
         Not bitmasks. The value at any index has all bits except those up to and including the bit number represented by
         that index set.
         """
 
-        self._bits: [int] = [0] * bit_count
+        self._bits = [0] * bit_count
         """
         Bits. The value at any index has the bit at the bit number represented by that index set.
         """
 
-        self._not_bits: [int] = [0] * bit_count
+        self._not_bits = [0] * bit_count
         """
         Not bits. The value at any index has all bits set except the bit number represented by that index.
         """
 
-        bitmask: int = 0
-        bit: int = 1
+        bitmask = 0
+        bit = 1
 
         # Initialize bitmasks and bits.
         for bit_number in range(bit_count):

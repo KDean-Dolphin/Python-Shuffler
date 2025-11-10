@@ -26,8 +26,8 @@ class TestShuffler(TestCase):
 
     validate_interval: Final[int] = 10889
 
-    def _generate(self, shuffler: Shuffler, iterable: Iterable, indexes: [int], values: [int]):
-        validate_countdown: int = 0
+    def _generate(self, shuffler: Shuffler, iterable: Iterable, indexes: list[int], values: list[int]):
+        validate_countdown = 0
 
         for index in iterable:
             # Validate state periodically.
@@ -35,7 +35,7 @@ class TestShuffler(TestCase):
                 shuffler.validate_state()
                 validate_countdown = self.validate_interval
 
-            value: int = shuffler.value_at(index)
+            value = shuffler.value_at(index)
 
             # Check that no duplicates have been generated.
             self.assertEqual(-1, indexes[value])
@@ -49,18 +49,18 @@ class TestShuffler(TestCase):
         # Iteration may not cover entire size; validate at the end with whatever remaining size.
         shuffler.validate_state()
 
-    def _compare(self, shuffler: Shuffler, iterable: Iterable, indexes: [int], values: [int]):
+    def _compare(self, shuffler: Shuffler, iterable: Iterable, indexes: list[int], values: list[int]):
         for index in iterable:
-            value: int = shuffler.value_at(index)
+            value = shuffler.value_at(index)
 
             # Check that indexes and values match.
             self.assertEqual(index, indexes[value])
             self.assertEqual(value, values[index])
 
     def _assert_cyclic(self, shuffler: Shuffler):
-        visited: [bool] = [False] * shuffler.size
+        visited = [False] * shuffler.size
 
-        index: int = 0
+        index = 0
 
         while True:
             self.assertFalse(visited[index])
@@ -77,10 +77,10 @@ class TestShuffler(TestCase):
             self.assertTrue(visited[index], index)
 
     def _test_repeatable(self, cyclic: bool):
-        shuffler: Shuffler = Shuffler(self.size, cyclic)
+        shuffler = Shuffler(self.size, cyclic)
 
-        indexes: [int] = [-1] * self.size
-        values: [int] = [-1] * self.size
+        indexes = [-1] * self.size
+        values = [-1] * self.size
 
         self._generate(shuffler, range(self.size), indexes, values)
         self._compare(shuffler, range(self.size), indexes, values)
@@ -95,13 +95,13 @@ class TestShuffler(TestCase):
     def _test_cyclic(self, sequential: bool):
         shuffler: Shuffler = Shuffler(self.size, True)
 
-        indexes: [int] = [-1] * self.size
-        values: [int] = [-1] * self.size
+        indexes = [-1] * self.size
+        values = [-1] * self.size
 
         self._generate(shuffler, range(self.size) if sequential else Shuffler(self.size, False), indexes, values)
 
-        visited: [bool] = [False] * self.size
-        value: int = 0
+        visited = [False] * self.size
+        value = 0
 
         for index in range(self.size):
             value = shuffler.value_at(value)
@@ -120,11 +120,11 @@ class TestShuffler(TestCase):
         self._test_cyclic(False)
 
     def _test_iterable(self, cyclic: bool):
-        shuffler: Shuffler = Shuffler(self.size, cyclic)
+        shuffler = Shuffler(self.size, cyclic)
 
-        indexes: [int] = [-1] * self.size
-        values: [int] = [-1] * self.size
-        index: int = 0
+        indexes = [-1] * self.size
+        values = [-1] * self.size
+        index = 0
 
         shuffler.validate_state()
 
@@ -154,33 +154,33 @@ class TestShuffler(TestCase):
         self._test_iterable(True)
 
     def test_persistence_manager(self):
-        size_3_4_int: int = self.size * 3 // 4
+        size_3_4_int = self.size * 3 // 4
 
-        indexes: [int] = [-1] * self.size
-        values: [int] = [-1] * self.size
+        indexes = [-1] * self.size
+        values = [-1] * self.size
 
-        persistence_manager: MemoryPersistenceManager = MemoryPersistenceManager()
+        persistence_manager = MemoryPersistenceManager()
 
-        shuffler1: Shuffler = Shuffler(self.size, False, persistence_manager)
+        shuffler1 = Shuffler(self.size, False, persistence_manager)
 
         self._generate(shuffler1, range(size_3_4_int), indexes, values)
 
-        shuffler2: Shuffler = Shuffler(self.size, False, persistence_manager)
+        shuffler2 = Shuffler(self.size, False, persistence_manager)
 
         self._compare(shuffler2, range(size_3_4_int), indexes, values)
         self._generate(shuffler2, range(size_3_4_int, self.size), indexes, values)
         self._compare(shuffler2, range(self.size), indexes, values)
 
     def _test_resize(self, cyclic: bool):
-        terminal_to_non_terminal_shuffler: Shuffler = Shuffler(20, cyclic)
+        terminal_to_non_terminal_shuffler = Shuffler(20, cyclic)
         terminal_to_non_terminal_shuffler.validate_state()
         terminal_to_non_terminal_shuffler.resize(200)
         terminal_to_non_terminal_shuffler.validate_state()
 
-        test_size: int = 20
+        test_size = 20
 
-        shuffler: Shuffler = Shuffler(test_size, cyclic)
-        index_value_dict: dict = dict()
+        shuffler = Shuffler(test_size, cyclic)
+        index_value_dict = dict[int, int]()
 
         for resize_index in range(20):
             for index in range(test_size // 2, test_size):
