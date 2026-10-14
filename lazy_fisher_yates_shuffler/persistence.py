@@ -32,12 +32,12 @@ class NodeState:
         :param unstruck_bitmap: Bitmap of unstruck entries for terminal node.
         """
 
-        self._unstruck_count: Final[int] = unstruck_count
+        self._unstruck_count: Final = unstruck_count
         """
         Number of unstruck entries in or below node.
         """
 
-        self._unstruck_bitmap: Final[int] = unstruck_bitmap
+        self._unstruck_bitmap: Final = unstruck_bitmap
         """
         Bitmap of unstruck entries for terminal node.
         """
@@ -165,17 +165,17 @@ class MemoryPersistenceManager(PersistenceManager):
         Construct an in-memory persistence manager.
         """
 
-        self._node_state_store: Final[dict] = dict()
+        self._node_state_store: Final = dict()
         """
         Dictionary for managing node state.
         """
 
-        self._index_value_store: Final[dict] = dict()
+        self._index_value_store: Final = dict()
         """
         Dictionary for managing index/value mapping.
         """
 
-        self._value_index_store: Final[dict] = dict()
+        self._value_index_store: Final = dict()
         """
         Dictionary for managing value/index mapping.
         """

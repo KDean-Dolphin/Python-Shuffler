@@ -30,7 +30,7 @@ class BitManager:
         ranging from 0 to 2^bit_count - 1.
         """
 
-        self._bit_count: Final[int] = bit_count
+        self._bit_count: Final = bit_count
         """
         Bit count.
         """
@@ -68,7 +68,7 @@ class BitManager:
 
             bit <<= 1
 
-        self._all_bits: Final[int] = bitmask
+        self._all_bits: Final = bitmask
         """
         Value of all bits set. This is equal to the last entry in the bitmasks array and is replicated for convenience.
         """

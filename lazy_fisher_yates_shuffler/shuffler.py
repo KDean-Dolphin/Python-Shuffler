@@ -44,23 +44,23 @@ class _Node:
         :param restore: If true, attempts to restore the node state.
         """
 
-        self.shuffler: Final[Shuffler] = shuffler
+        self.shuffler: Final = shuffler
         """
         Enclosing shuffler.
         """
 
-        self.key: Final[int] = key
+        self.key: Final = key
         """
         Persistence key for node state.
         """
 
-        self.bit_number: Final[int] = bit_number
+        self.bit_number: Final = bit_number
         """
         Bit number supported by this node.
         """
 
         # Terminal node supports up to TERMINAL_SIZE entries.
-        self.terminal: Final[bool] = bit_number == Shuffler.TERMINAL_SIZE_BIT_COUNT - 1
+        self.terminal: Final = bit_number == Shuffler.TERMINAL_SIZE_BIT_COUNT - 1
         """
         True if this node is a terminal node.
         """
@@ -76,7 +76,7 @@ class _Node:
         """
 
         # Attempt to restore the node state if indicated.
-        node_state: Final[Optional[NodeState]] = shuffler.persistence_manager.restore_node_state(key) \
+        node_state: Final = shuffler.persistence_manager.restore_node_state(key) \
             if restore else \
             None
 
@@ -116,11 +116,16 @@ class _Node:
         :return: Right node, constructed if necessary.
         """
 
+        right: _Node
+
         if self._right is None:
             # Right key is key-2^(bit_number+1).
-            self._right = self.init_right_left(self.key - self.shuffler.bit_manager.bit(self.bit_number + 1))
+            right = self.init_right_left(self.key - self.shuffler.bit_manager.bit(self.bit_number + 1))
+            self._right = right
+        else:
+            right = self._right
 
-        return self._right
+        return right
 
     @property
     def left(self) -> _Node:
@@ -128,11 +133,16 @@ class _Node:
         :return: Left node, constructed if necessary.
         """
 
+        left: _Node
+
         if self._left is None:
             # Left key is key-1.
-            self._left = self.init_right_left(self.key - 1)
+            left = self.init_right_left(self.key - 1)
+            self._left = left
+        else:
+            left = self._left
 
-        return self._left
+        return left
 
     def validate_state(self, keys: list[int], size: int, cyclic: bool):
         """
@@ -151,7 +161,7 @@ class _Node:
         if self.struck_count < 0:
             raise Exception(f"Negative struck count {self.struck_count} at node {self.key}")
 
-        node_state: Final[Optional[NodeState]] = self.shuffler.persistence_manager.restore_node_state(self.key)
+        node_state: Final = self.shuffler.persistence_manager.restore_node_state(self.key)
 
         if self.struck_count == 0:
             # Nodes with zero struck count shouldn't be persisted.
@@ -169,8 +179,8 @@ class _Node:
                                 f"persisted struck bitmap {node_state.struck_bitmap:08X} at node {self.key}")
 
         if not self.terminal:
-            bit_manager: Final[BitManager] = self.shuffler.bit_manager
-            bit: Final[int] = bit_manager.bit(self.bit_number)
+            bit_manager: Final = self.shuffler.bit_manager
+            bit: Final = bit_manager.bit(self.bit_number)
 
             right_size: int
             left_size: int
@@ -231,7 +241,7 @@ class _Node:
             if self._right is not None or self._left is not None:
                 raise Exception(f"Unexpected right and/or left nodes at terminal node {self.key}")
 
-            struck_bit_count: Final[int] = self.struck_bitmap.bit_count()
+            struck_bit_count: Final = self.struck_bitmap.bit_count()
 
             # Struck count should equal number of bits in struck bitmap.
             if self.struck_count != struck_bit_count:
@@ -253,37 +263,37 @@ class Shuffler:
     it link to the beginning of any open loop except its own.
     """
 
-    TERMINAL_SIZE: Final[int] = 64
+    TERMINAL_SIZE: Final = 64
     """
     Terminal size (number of bits in qword).
     """
 
-    _TERMINAL_SIZE_BITMASK: Final[int] = TERMINAL_SIZE - 1
+    _TERMINAL_SIZE_BITMASK: Final = TERMINAL_SIZE - 1
     """
     Terminal size bitmask.
     """
 
-    TERMINAL_SIZE_BIT_COUNT: Final[int] = _TERMINAL_SIZE_BITMASK.bit_count()
+    TERMINAL_SIZE_BIT_COUNT: Final = _TERMINAL_SIZE_BITMASK.bit_count()
     """
     Terminal size bit count.
     """
 
-    _TERMINAL_BIT_MANAGER: Final[BitManager] = BitManager(TERMINAL_SIZE)
+    _TERMINAL_BIT_MANAGER: Final = BitManager(TERMINAL_SIZE)
     """
     Bit manager for terminal struck bitmap manipulation.
     """
 
-    _BIT_COUNT_BITMASK_2: Final[int] = 0x5555555555555555
+    _BIT_COUNT_BITMASK_2: Final = 0x5555555555555555
     """
     Bitmask for 2 binary digits bit count (even bits).
     """
 
-    _BIT_COUNT_BITMASK_4: Final[int] = 0x3333333333333333
+    _BIT_COUNT_BITMASK_4: Final = 0x3333333333333333
     """
     Bitmask for 4 binary digits bit count (even 2-bit groups).
     """
 
-    _BIT_COUNT_BITMASK_8: Final[int] = 0x0F0F0F0F0F0F0F0F
+    _BIT_COUNT_BITMASK_8: Final = 0x0F0F0F0F0F0F0F0F
     """
     Bitmask for 8 binary digits bit count (even nibbles).
     """
@@ -299,26 +309,21 @@ class Shuffler:
         :param persistence_manager: Persistence manager; defaults to memory persistence manager if None.
         """
 
-        self._cyclic: Final[bool] = cyclic
+        self._cyclic: Final = cyclic
         """
         If true, values are generated in a cyclic pattern.
         """
 
-        self._random: Final[Random] = Random()
+        self._random: Final = Random()
         """
         Randomizer.
         """
 
-        self._persistence_manager: Final[PersistenceManager] = persistence_manager \
+        self._persistence_manager: Final = persistence_manager \
             if persistence_manager is not None else \
             MemoryPersistenceManager()
         """
         Persistence manager.
-        """
-
-        self._bit_manager: Optional[BitManager] = None
-        """
-        Bit manager up to size bit length + 1 for fast bit manipulation.
         """
 
         self._size = size
@@ -326,17 +331,22 @@ class Shuffler:
         Size.
         """
 
-        self._root: Optional[_Node] = None
+        self._bit_manager: BitManager
+        """
+        Bit manager up to size bit length + 1 for fast bit manipulation.
+        """
+
+        self._root: _Node
         """
         Root.
         """
 
-        self._remaining_size = 0
+        self._remaining_size: int
         """
         Remaining size, equivalent to size minus root struck count.
         """
 
-        self._build_root()
+        self._build_root(True)
 
     @property
     def size(self) -> int:
@@ -371,46 +381,41 @@ class Shuffler:
 
         return self._bit_manager
 
-    def _build_root(self):
+    def _build_root(self, initializing: bool):
         """
         Build the root based on the size.
         """
 
-        resizing: Final[bool] = self._root is not None
-
         # If size is an exact power of two, subtracting 1 will force the bit length down by 1; round up to value for
         # full capacity terminal node if necessary.
-        size_bit_length: Final[int] = max((self.size - 1).bit_length(), Shuffler.TERMINAL_SIZE_BIT_COUNT)
+        size_bit_length: Final = max((self.size - 1).bit_length(), Shuffler.TERMINAL_SIZE_BIT_COUNT)
 
-        # New root must be created if not resizing (no root yet) or root bit number is changing.
-        if not resizing or size_bit_length != self._root.bit_number + 1:
+        # New root must be created if initializing (no root yet) or root bit number is changing.
+        if initializing or size_bit_length != self._root.bit_number + 1:
             # Bit manager is aligned with number of bits in root.
             self._bit_manager = BitManager(size_bit_length + 1)
 
-            # Root key is 2^(size_bit_length+1)-1.
-            new_root: Final[_Node] = _Node(self, self.bit_manager.all_bits, size_bit_length - 1, not resizing)
+            # New root key is 2^(size_bit_length+1)-1.
+            new_root: Final = _Node(self, self.bit_manager.all_bits, size_bit_length - 1, initializing)
 
-            if resizing:
+            if not initializing:
                 # Copy struck count from old root.
-                root_struck_count: Final[int] = self._root.struck_count
+                root_struck_count: Final = self._root.struck_count
 
                 # Nodes down the right from new root to above old root have to be properly constructed and persisted if
                 # struck count is non-zero.
                 if root_struck_count != 0:
-                    update_node: Optional[_Node] = new_root
+                    update_node = new_root
 
-                    while update_node is not None:
+                    # If update node has non-zero struck count, it's the old root and no further adjustments are
+                    # required.
+                    while update_node.struck_count == 0:
                         update_node.struck_count = root_struck_count
 
                         self.save_node_state(update_node)
 
                         # Update node is never terminal so there is always a right node.
                         update_node = update_node.right
-
-                        # If right node has non-zero struck count, it's the old root and no further adjustments are
-                        # required.
-                        if update_node.struck_count != 0:
-                            update_node = None
 
             self._root = new_root
 
@@ -426,7 +431,7 @@ class Shuffler:
 
         self.persistence_manager.save_node_state(node.key, NodeState(node.struck_count, node.struck_bitmap))
 
-    def _next_value(self):
+    def _next_value(self) -> int:
         """
         Generate the next value.
 
@@ -562,20 +567,19 @@ class Shuffler:
             raise Exception(f"Index {index} must be >=0 and < {self._size}")
 
         # Check for previous generation of value.
-        value: Optional[int] = self._persistence_manager.value_at(index)
+        value = self._persistence_manager.value_at(index)
 
-        randomized: bool
+        randomized = False
 
         if not self._cyclic:
-            randomized = value is None
-
-            if randomized:
+            # Value is None if index has not yet been assigned.
+            if value is None:
                 value = self._next_value()
+                randomized = True
         else:
-            # Value is None if index is the start of a new loop, negative if index is the end of an existing loop.
-            randomized = value is None or value < 0
-
-            if randomized:
+            # Value is None if index is the start of a new loop (not yet been assigned), negative if index is the end of
+            # an existing loop.
+            if value is None or value < 0:
                 loop_start: int
                 not_loop_start: int
 
@@ -591,7 +595,7 @@ class Shuffler:
                     # Delete existing index/value pair.
                     self.persistence_manager.delete_index_value(index, value)
 
-                terminal_bit_number: Final[int] = loop_start & Shuffler._TERMINAL_SIZE_BITMASK
+                terminal_bit_number: Final = loop_start & Shuffler._TERMINAL_SIZE_BITMASK
 
                 reserved_nodes: list[_Node] = []
 
@@ -622,7 +626,7 @@ class Shuffler:
                 self._remaining_size -= 1
 
                 # Store reserved remaining size (faster than incrementing after unreserve).
-                reserved_remaining_size: Final[int] = self._remaining_size
+                reserved_remaining_size: Final = self._remaining_size
 
                 # Remaining size is zero if final loop is being closed.
                 if self._remaining_size != 0:
@@ -655,6 +659,8 @@ class Shuffler:
                 else:
                     # Close the loop.
                     value = loop_start
+
+                randomized = True
 
         if randomized:
             # Store index/value pair.
@@ -694,7 +700,7 @@ class Shuffler:
 
             self._size = new_size
 
-            self._build_root()
+            self._build_root(False)
 
     def validate_state(self):
         """
@@ -738,7 +744,7 @@ class Shuffler:
             :param shuffler: Shuffler over which to iterate.
             """
 
-            self._shuffler: Final[Shuffler] = shuffler
+            self._shuffler: Final = shuffler
             """
             Shuffler.
             """
@@ -756,7 +762,7 @@ class Shuffler:
             if self._next_index == self._shuffler.size:
                 raise StopIteration
 
-            value: Final[int] = self._shuffler.value_at(self._next_index)
+            value: Final = self._shuffler.value_at(self._next_index)
 
             if not self._shuffler.cyclic:
                 # Iterator for non-cyclic shuffler increments index.

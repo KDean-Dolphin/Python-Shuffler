@@ -22,9 +22,9 @@ from lazy_fisher_yates_shuffler import Shuffler
 
 
 class TestShuffler(TestCase):
-    size: Final[int] = 111111
+    size: Final = 111111
 
-    validate_interval: Final[int] = 10889
+    validate_interval: Final = 10889
 
     def _generate(self, shuffler: Shuffler, iterable: Iterable, indexes: list[int], values: list[int]):
         validate_countdown = 0
