@@ -149,26 +149,24 @@ class _Node:
 
         # Struck count must be >= 0.
         if self.struck_count < 0:
-            raise Exception("Negative struck count {} at node {}".format(self.struck_count, self.key))
+            raise Exception(f"Negative struck count {self.struck_count} at node {self.key}")
 
         node_state: Final[Optional[NodeState]] = self.shuffler.persistence_manager.restore_node_state(self.key)
 
         if self.struck_count == 0:
             # Nodes with zero struck count shouldn't be persisted.
             if node_state is not None:
-                raise Exception("Unexpected persistence of node {} with zero struck count".format(self.key))
+                raise Exception(f"Unexpected persistence of node {self.key} with zero struck count")
         else:
             # Nodes with non-zero struck count should be persisted.
             if node_state is None:
-                raise Exception("Missing persistence of node {} with non-zero struck count".format(self.key))
+                raise Exception(f"Missing persistence of node {self.key} with non-zero struck count")
 
             # Persisted node state must match in-memory node state.
             if self.struck_count != node_state.struck_count or self.struck_bitmap != node_state.struck_bitmap:
-                raise Exception("Struck count {} doesn't match persisted struck count {} or struck bitmap {:08X} "
-                                "doesn't match persisted struck bitmap {:08X} at node {}".
-                                format(self.struck_count, node_state.struck_count,
-                                       self.struck_bitmap, node_state.struck_bitmap,
-                                       self.key))
+                raise Exception(f"Struck count {self.struck_count} doesn't match persisted struck count "
+                                f"{node_state.struck_count} or struck bitmap {self.struck_bitmap:08X} doesn't match "
+                                f"persisted struck bitmap {node_state.struck_bitmap:08X} at node {self.key}")
 
         if not self.terminal:
             bit_manager: Final[BitManager] = self.shuffler.bit_manager
@@ -197,7 +195,7 @@ class _Node:
             if self.struck_count == 0:
                 # Nodes with zero struck count shouldn't have right and/or left nodes in non-cyclic shuffler.
                 if not cyclic and (self._right is not None or self._left is not None):
-                    raise Exception("Unexpected right and/or left nodes at non-persisted node {}".format(self.key))
+                    raise Exception(f"Unexpected right and/or left nodes at non-persisted node {self.key}")
 
                 # Validate nodes that have been created to support cyclic shuffler.
                 right = self._right
@@ -209,20 +207,19 @@ class _Node:
             # Left node should be None if right node can handle this node.
             if left_size == 0 and (self._left is not None or
                                    self.shuffler.persistence_manager.restore_node_state(self.key - 1) is not None):
-                raise Exception("Unexpected left node at non-terminal node {}".format(self.key))
+                raise Exception(f"Unexpected left node at non-terminal node {self.key}")
 
             right_left_struck_count = (right.struck_count if right is not None else 0) + \
                                       (left.struck_count if left is not None else 0)
 
             # Struck count should equal sum of right and left struck counts.
             if self.struck_count != right_left_struck_count:
-                raise Exception("Struck count {} doesn't match sum of right and left struck counts {} at "
-                                "non-terminal node {}".format(self.struck_count, right_left_struck_count,
-                                                              self.key))
+                raise Exception(f"Struck count {self.struck_count} doesn't match sum of right and left struck counts "
+                                f"{right_left_struck_count} at non-terminal node {self.key}")
 
             # Non-terminal node should have zero bitmap.
             if self.struck_bitmap != 0:
-                raise Exception("Non-zero struck bitmap at non-terminal node {}".format(self.key))
+                raise Exception(f"Non-zero struck bitmap at non-terminal node {self.key}")
 
             if right is not None:
                 right.validate_state(keys, right_size, cyclic)
@@ -232,14 +229,14 @@ class _Node:
         else:
             # Terminal nodes shouldn't have right and/or left nodes.
             if self._right is not None or self._left is not None:
-                raise Exception("Unexpected right and/or left nodes at terminal node {}".format(self.key))
+                raise Exception(f"Unexpected right and/or left nodes at terminal node {self.key}")
 
             struck_bit_count: Final[int] = self.struck_bitmap.bit_count()
 
             # Struck count should equal number of bits in struck bitmap.
             if self.struck_count != struck_bit_count:
-                raise Exception("Struck count {} doesn't match struck bit count {} at terminal node {}".format(
-                    self.struck_count, struck_bit_count, self.key))
+                raise Exception(f"Struck count {self.struck_count} doesn't match struck bit count {struck_bit_count} "
+                                f"at terminal node {self.key}")
 
 
 class Shuffler:
@@ -562,7 +559,7 @@ class Shuffler:
         """
 
         if not 0 <= index < self._size:
-            raise Exception("Index {} must be >=0 and < {}".format(index, self._size))
+            raise Exception(f"Index {index} must be >=0 and < {self._size}")
 
         # Check for previous generation of value.
         value: Optional[int] = self._persistence_manager.value_at(index)
@@ -663,7 +660,7 @@ class Shuffler:
             # Store index/value pair.
             self._persistence_manager.save_index_value(index, value)
 
-        assert 0 <= value < self._size, "Value {} must be >=0 and < {}".format(value, self._size)
+        assert 0 <= value < self._size, f"Value {value} must be >=0 and < {self._size}"
 
         return value
 
@@ -705,8 +702,8 @@ class Shuffler:
         """
 
         if self._remaining_size != self.size - self._root.struck_count:
-            raise Exception("Remaining size {} doesn't equal input size {} minus root struck count {}".format(
-                self._remaining_size, self.size, self._root.struck_count))
+            raise Exception(f"Remaining size {self._remaining_size} doesn't equal input size {self.size} minus root "
+                            f"struck count {self._root.struck_count}")
 
         keys: list[int] = []
 
@@ -719,15 +716,15 @@ class Shuffler:
 
         for key in keys:
             if key == maximum_key:
-                raise Exception("Duplicate key {}".format(key))
+                raise Exception(f"Duplicate key {key}")
 
             maximum_key = key
 
         if minimum_key < Shuffler._TERMINAL_SIZE_BITMASK << 1 | 1:
-            raise Exception("Invalid minimum key {}".format(minimum_key))
+            raise Exception(f"Invalid minimum key {minimum_key}")
 
         if maximum_key != minimum_key and maximum_key >= 1 << ((self.size - 1).bit_length() + 1):
-            raise Exception("Invalid maximum key {}".format(maximum_key))
+            raise Exception(f"Invalid maximum key {maximum_key}")
 
     class Iterator:
         """
