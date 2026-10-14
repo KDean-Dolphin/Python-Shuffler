@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lazy-fisher-yates-shuffler"
-version = "1.0.4"
+version = "1.0.5"
 description = "Lazy Fisher-Yates shuffler"
 license = "Apache-2.0"
 authors = [
