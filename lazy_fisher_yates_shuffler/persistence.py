@@ -15,7 +15,7 @@ language governing permissions and limitations under the License.
 
 
 from abc import ABC, abstractmethod
-from typing import Final, Optional
+from typing import Final
 
 
 class NodeState:
@@ -82,7 +82,7 @@ class PersistenceManager(ABC):
         pass
 
     @abstractmethod
-    def restore_node_state(self, key: int) -> Optional[NodeState]:
+    def restore_node_state(self, key: int) -> NodeState | None:
         """
         Restore node state. If the node state was not previously saved, the node has not been previously visited and a
         None result forces the node to be constructed using default values.
@@ -131,7 +131,7 @@ class PersistenceManager(ABC):
         pass
 
     @abstractmethod
-    def value_at(self, index: int) -> Optional[int]:
+    def value_at(self, index: int) -> int | None:
         """
         Get the value at an index from the underlying store.
 
@@ -143,7 +143,7 @@ class PersistenceManager(ABC):
         pass
 
     @abstractmethod
-    def index_of(self, value: int) -> Optional[int]:
+    def index_of(self, value: int) -> int | None:
         """
         Get the index for a value from the underlying store.
 
@@ -183,7 +183,7 @@ class MemoryPersistenceManager(PersistenceManager):
     def save_node_state(self, key: int, node_state: NodeState):
         self._node_state_store[key] = node_state
 
-    def restore_node_state(self, key: int) -> Optional[NodeState]:
+    def restore_node_state(self, key: int) -> NodeState | None:
         try:
             return self._node_state_store[key]
         except KeyError:
@@ -200,13 +200,13 @@ class MemoryPersistenceManager(PersistenceManager):
         del self._value_index_store[value]
         del self._index_value_store[index]
 
-    def value_at(self, index: int) -> Optional[int]:
+    def value_at(self, index: int) -> int | None:
         try:
             return self._index_value_store[index]
         except KeyError:
             return None
 
-    def index_of(self, value: int) -> Optional[int]:
+    def index_of(self, value: int) -> int | None:
         try:
             return self._value_index_store[value]
         except KeyError:

@@ -20,7 +20,7 @@ language governing permissions and limitations under the License.
 from __future__ import annotations
 
 from random import Random
-from typing import Final, Optional
+from typing import Final
 
 from .bit_manager import BitManager
 from .persistence import NodeState, PersistenceManager, MemoryPersistenceManager
@@ -88,12 +88,12 @@ class _Node:
             self.struck_count = node_state.struck_count
             self.struck_bitmap = node_state.struck_bitmap
 
-        self._right: Optional[_Node] = None
+        self._right: _Node | None = None
         """
         Right node for managing bit = 0.
         """
 
-        self._left: Optional[_Node] = None
+        self._left: _Node | None = None
         """
         Left node for managing bit = 1.
         """
@@ -199,8 +199,8 @@ class _Node:
                 right_size = size
                 left_size = 0
 
-            right: Optional[_Node]
-            left: Optional[_Node]
+            right: _Node | None
+            left: _Node | None
 
             if self.struck_count == 0:
                 # Nodes with zero struck count shouldn't have right and/or left nodes in non-cyclic shuffler.
@@ -298,7 +298,7 @@ class Shuffler:
     Bitmask for 8 binary digits bit count (even nibbles).
     """
 
-    def __init__(self, size: int, cyclic: bool, persistence_manager: Optional[PersistenceManager] = None):
+    def __init__(self, size: int, cyclic: bool, persistence_manager: PersistenceManager | None = None):
         """
         Construct a shuffler.
 
@@ -444,7 +444,7 @@ class Shuffler:
 
         value = 0
 
-        node: Optional[_Node] = self._root
+        node: _Node | None = self._root
 
         while node is not None:
             pending_save_node = node
@@ -599,7 +599,7 @@ class Shuffler:
 
                 reserved_nodes: list[_Node] = []
 
-                node: Optional[_Node] = self._root
+                node: _Node | None = self._root
 
                 while node is not None:
                     pending_save_node = node
@@ -670,7 +670,7 @@ class Shuffler:
 
         return value
 
-    def index_of(self, value: int) -> Optional[int]:
+    def index_of(self, value: int) -> int | None:
         """
         Get the index for a given value. If the value is found in the persistence manager, the corresponding index is
         returned. Otherwise, None is returned.
